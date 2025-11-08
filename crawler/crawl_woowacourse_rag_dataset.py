@@ -5,3 +5,8 @@ def fetch_java_repos():
     res = requests.get(url)
     repos = res.json()
     return [r for r in repos if r["name"].startswith("java-")]
+
+def fetch_readme(repo_name):
+    url = f"https://raw.githubusercontent.com/woowacourse-precourse/{repo_name}/main/README.md"
+    res = requests.get(url)
+    return res.text
