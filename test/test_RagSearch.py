@@ -114,3 +114,35 @@ def test_save_without_index_raises_error():
     
     with pytest.raises(ValueError, match="인덱스"):
         rag.save_index("test.bin")
+
+def test_load_index_restores_index(tmp_path):
+    rag1 = WoowacourseRAG()
+    rag1.build_index()
+    index_path = tmp_path / "test_index.bin"
+    rag1.save_index(str(index_path))
+    
+    rag2 = WoowacourseRAG()
+    rag2.load_index(str(index_path))
+    
+    assert rag2.index is not None
+    assert len(rag2.documents) == len(rag1.documents)
+    
+def test_load_noneexistent_file_raises_error():
+    rag = WoowacourseRAG()
+    
+    with pytest.raises(FileNotFoundError):
+        rag.load_index("noneexistent.bin")
+        
+def test_loaded_index_search(tmp_path):
+    rag1 = WoowacourseRAG()
+    rag1.build_index()
+    index_path = tmp_path / "test_index.bin"
+    rag1.save_index(str(index_path))
+    
+    rag2 = WoowacourseRAG()
+    rag2.load_index(str(index_path))
+    
+    results = rag2.search("자동차", top_k=2)
+    
+    assert len(results) == 2
+    assert "similarity_score" in results[0]
