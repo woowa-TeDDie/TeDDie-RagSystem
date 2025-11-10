@@ -30,4 +30,21 @@ def test_embedding_single_test_returns_vector():
     assert embedding is not None
     assert len(embedding.shape) == 1
     assert embedding.shape[0] > 0
+
+def test_build_index_creates_faiss_index():
+    rag = WoowacourseRAG()
+    rag.build_index()
     
+    assert rag.index is not None
+    
+def test_index_contains_all_documents():
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    assert rag.index.ntotal == len(rag.documents)
+    
+def test_build_index_loads_documents_automatically():
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    assert len(rag.documents) > 0
