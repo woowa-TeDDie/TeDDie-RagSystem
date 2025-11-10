@@ -2,6 +2,7 @@ import json
 import os
 import faiss
 import numpy as np
+from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 
@@ -52,6 +53,15 @@ class WoowacourseRAG:
         if self.index is None:
             raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. 저장할 인덱스가 없습니다.")
         faiss.write_index(self.index, index_path)
+        
+    def load_index(self, index_path: str = "faiss_index.bin"):
+        if not Path(index_path).exists():
+            raise FileNotFoundError(f"[ERROR] 지정된 경로에 인덱스 파일이 없습니다: {index_path}")
+        
+        if not self.documents:
+            self.load_documents()
+            
+        self.index = faiss.read_index(index_path)
         
     @property
     def documents(self):
