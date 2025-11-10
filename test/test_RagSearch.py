@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 
 from rag.RagSearch import WoowacourseRAG
 
@@ -98,3 +99,18 @@ def test_search_with_different_top_k():
     
     assert len(results_2) == 2
     assert len(results_5) == 5
+    
+def test_save_index_creates_file(tmp_path):
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    index_path = tmp_path / "test_index.bin"
+    rag.save_index(str(index_path))
+    
+    assert index_path.exists()
+    
+def test_save_without_index_raises_error():
+    rag = WoowacourseRAG()
+    
+    with pytest.raises(ValueError, match="인덱스"):
+        rag.save_index("test.bin")
