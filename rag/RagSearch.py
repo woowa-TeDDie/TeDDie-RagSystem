@@ -3,29 +3,30 @@ import faiss
 import numpy as np
 
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
 
 from Loader import DocumentLoader
+from Embedder import Embedder
 
 class WoowacourseRAG:
     def __init__(self, jsonl_path="woowacourse_rag_dataset.jsonl"):
         self.loader = DocumentLoader(jsonl_path)
         self._documents = []
-        self.model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        self.model = Embedder().model
+        self.embedder = Embedder()
         self.index = None
 
     def load_documents(self):
         self._documents = self.loader.load()
                 
     def embed_text(self, text: str):
-        return self.model.encode(text)
+        return self.embedder.embed_single(text)
     
     def build_index(self):
         if not self.documents:
             self.load_documents()
 
         texts = [doc['text'] for doc in self.documents]
-        embeddings = self.model.encode(texts, show_progress_bar=True)
+        embeddings = self.embedder.embed(texts, show_progress=True)
         
         dimension = embeddings.shape[1]
         self.index = faiss.IndexFlatL2(dimension)
@@ -34,11 +35,10 @@ class WoowacourseRAG:
     def search(self, query: str, top_k: int = 3):
         if self.index is None:
             raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. build_index() 메서드를 먼저 호출하세요.")
-        query_embedding = self.model.encode([query])
-        distances, indices = self.index.search(
-            query_embedding.astype('float32'), 
-            top_k
-        )
+        
+        query_embedding = self.embedder.embed([query]).astype('float32')
+        distances, indices = self.index.search(query_embedding, top_k)
+        
         results = []
         for idx, distance in zip(indices[0], distances[0]):
             doc = self.documents[idx].copy()
