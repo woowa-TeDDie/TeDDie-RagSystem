@@ -1,0 +1,6 @@
+requests
+tqdm
+faiss-cpu
+numpy
+sentence-transformers
+pytest
