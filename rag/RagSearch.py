@@ -1,65 +1,56 @@
 import os
-import faiss
-import numpy as np
-
 from pathlib import Path
 
 from Loader import DocumentLoader
 from Embedder import Embedder
+from SearchEngine import FaissSearchEngine
 
 class WoowacourseRAG:
     def __init__(self, jsonl_path="woowacourse_rag_dataset.jsonl"):
         self.loader = DocumentLoader(jsonl_path)
         self._documents = []
-        self.model = Embedder().model
         self.embedder = Embedder()
-        self.index = None
+        self.model = self.embedder.model
+        self.engine = None 
 
     def load_documents(self):
         self._documents = self.loader.load()
                 
     def embed_text(self, text: str):
-        return self.embedder.embed_single(text)
+        return self.embedder.encode_single(text)
     
     def build_index(self):
         if not self.documents:
             self.load_documents()
 
-        texts = [doc['text'] for doc in self.documents]
-        embeddings = self.embedder.embed(texts, show_progress=True)
-        
-        dimension = embeddings.shape[1]
-        self.index = faiss.IndexFlatL2(dimension)
-        self.index.add(embeddings.astype('float32'))
-        
+        self.engine = FaissSearchEngine(self.embedder, self.documents)
+        self.engine.build()
+        return self.engine.index
+    
     def search(self, query: str, top_k: int = 3):
-        if self.index is None:
-            raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. build_index() 메서드를 먼저 호출하세요.")
-        
-        query_embedding = self.embedder.embed([query]).astype('float32')
-        distances, indices = self.index.search(query_embedding, top_k)
-        
-        results = []
-        for idx, distance in zip(indices[0], distances[0]):
-            doc = self.documents[idx].copy()
-            doc['similarity_score'] = float(distance)
-            results.append(doc)
-        return results
+        if self.engine is None or self.engine.index is None:
+            raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. build_index()를 먼저 호출하세요.")
+        return self.engine.search(query, top_k)
     
     def save_index(self, index_path: str):
-        if self.index is None:
+        if self.engine is None or self.engine.index is None:
             raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. 저장할 인덱스가 없습니다.")
-        faiss.write_index(self.index, index_path)
-        
+        self.engine.save(index_path)
+
     def load_index(self, index_path: str = "faiss_index.bin"):
         if not Path(index_path).exists():
             raise FileNotFoundError(f"[ERROR] 지정된 경로에 인덱스 파일이 없습니다: {index_path}")
-        
+
         if not self.documents:
             self.load_documents()
-            
-        self.index = faiss.read_index(index_path)
+
+        self.engine = FaissSearchEngine(self.embedder, self.documents)
+        self.engine.load(index_path)
         
+    @property
+    def index(self):
+        return None if not self.engine else self.engine.index
+
     @property
     def documents(self):
         return self._documents
