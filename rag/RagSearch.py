@@ -47,6 +47,11 @@ class WoowacourseRAG:
             doc['similarity_score'] = float(distance)
             results.append(doc)
         return results
+    
+    def save_index(self, index_path: str):
+        if self.index is None:
+            raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. 저장할 인덱스가 없습니다.")
+        faiss.write_index(self.index, index_path)
         
     @property
     def documents(self):
