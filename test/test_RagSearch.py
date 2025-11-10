@@ -48,3 +48,53 @@ def test_build_index_loads_documents_automatically():
     rag.build_index()
     
     assert len(rag.documents) > 0
+    
+def test_search_returns_list():
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    results = rag.search("자동차 경주", top_k=3)
+    
+    assert isinstance(results, list)
+    assert len(results) == 3
+
+
+def test_search_result_has_required_fields():
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    results = rag.search("로또", top_k=1)
+    result = results[0]
+    
+    assert "repo" in result
+    assert "text" in result
+    assert "url" in result
+    assert "similarity_score" in result
+
+
+def test_search_returns_most_similar_first():
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    results = rag.search("숫자 야구", top_k=3)
+    scores = [r["similarity_score"] for r in results]
+    
+    assert scores == sorted(scores)
+
+
+def test_search_without_index_raises_error():
+    rag = WoowacourseRAG()
+    
+    with pytest.raises(ValueError, match="인덱스"):
+        rag.search("query")
+
+
+def test_search_with_different_top_k():
+    rag = WoowacourseRAG()
+    rag.build_index()
+    
+    results_2 = rag.search("TDD", top_k=2)
+    results_5 = rag.search("TDD", top_k=5)
+    
+    assert len(results_2) == 2
+    assert len(results_5) == 5

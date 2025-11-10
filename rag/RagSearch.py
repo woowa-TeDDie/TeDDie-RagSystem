@@ -32,7 +32,22 @@ class WoowacourseRAG:
         dimension = embeddings.shape[1]
         self.index = faiss.IndexFlatL2(dimension)
         self.index.add(embeddings.astype('float32'))
-
+        
+    def search(self, query: str, top_k: int = 3):
+        if self.index is None:
+            raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. build_index() 메서드를 먼저 호출하세요.")
+        query_embedding = self.model.encode([query])
+        distances, indices = self.index.search(
+            query_embedding.astype('float32'), 
+            top_k
+        )
+        results = []
+        for idx, distance in zip(indices[0], distances[0]):
+            doc = self.documents[idx].copy()
+            doc['similarity_score'] = float(distance)
+            results.append(doc)
+        return results
+        
     @property
     def documents(self):
         return self._documents
