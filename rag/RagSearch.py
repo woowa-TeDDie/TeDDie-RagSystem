@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
 
-from Loader import DocumentLoader
-from Embedder import Embedder
-from SearchEngine import FaissSearchEngine
+from rag.Loader import DocumentLoader
+from rag.Embedder import Embedder
+from rag.SearchEngine import FaissSearchEngine
 
 class WoowacourseRAG:
     def __init__(self, jsonl_path="woowacourse_rag_dataset.jsonl"):

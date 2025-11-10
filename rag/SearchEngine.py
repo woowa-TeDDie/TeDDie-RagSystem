@@ -13,7 +13,7 @@ class FaissSearchEngine:
             raise ValueError("[ERROR] 문서가 없습니다. 문서를 먼저 로드하세요.")
         
         texts = [doc['text'] for doc in self.documents]
-        embeddings = self.embedder.embed(texts, show_progress=show_progress)
+        embeddings = self.embedder.encode(texts, show_progress=show_progress)
         
         dim = embeddings.shape[1]
         self.index = faiss.IndexFlatL2(dim)
@@ -23,7 +23,7 @@ class FaissSearchEngine:
         if self.index is None:
             raise ValueError("[ERROR] 인덱스가 구축되지 않았습니다. build() 메서드를 먼저 호출하세요.")
         
-        query_vector = self.embedder.embed([query]).astype('float32')
+        query_vector = self.embedder.encode([query]).astype('float32')
         distances, indices = self.index.search(query_vector, top_k)
         
         results = []

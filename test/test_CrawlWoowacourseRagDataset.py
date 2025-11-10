@@ -17,3 +17,4 @@ def test_fetch_readme_returns_string():
     content = fetch_readme("java-lotto-6")
     assert isinstance(content, str)
     assert "과제 진행" in content or "기능 요구" in content
+    
