@@ -1,7 +1,7 @@
 import pytest
 import sys, os
 
-from crawler.crawl_woowacourse_rag_dataset import fetch_java_repos, fetch_readme
+from crawler.CrawlWoowacourseRagDataset import fetch_java_repos, fetch_readme
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
